@@ -11,7 +11,8 @@ mainbox {
 
 /* ---- Window ---- */
 window {
-  width: 45%;
+  width: inherit;
+  height: inherit;
 }
 
 /* ---- Entry ---- */
@@ -27,6 +28,8 @@ listview {
   lines: 7;
   fixed-height: false;
   scrollbar: true;
+  spacing: 6px;
+  cycle: true;
 }
 
 /* ---- Elements ---- */
@@ -41,4 +44,6 @@ element-icon {
 element-text {
   horizontal-align: 0.0;
   vertical-align: 0.5;
+  padding: 0px;
+  margin: 0px;
 }

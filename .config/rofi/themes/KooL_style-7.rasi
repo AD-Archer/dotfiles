@@ -7,12 +7,11 @@
 configuration {
 	modi:                       "drun,run,filebrowser,window";
     show-icons:                 true;
-    display-drun:                " ";
-    display-run:                 " ";
-    display-filebrowser:         " ";
-    display-window:              " ";
+    display-drun:               "  ";
+    display-run:                "  ";
+    display-filebrowser:        "  ";
+    display-window:             "  ";
 	drun-display-format:        "{name}";
-    dpi:						1;
     hover-select:               true;
     me-select-entry:            "MouseSecondary";
     me-accept-entry:            "MousePrimary";
@@ -31,7 +30,7 @@ configuration {
 }
 /*****-- Elements Font Size -----*****/
 element-text {
-  font: "JetBrainsMono Nerd Font SemiBold 10";
+  font: "JetBrainsMono Nerd Font SemiBold 11";
 }
 
 /*****----- Main Window -----*****/
@@ -141,7 +140,7 @@ element {
     enabled:                     true;
     spacing:                     10px;
     margin:                      0px;
-    padding:                     0px;
+    padding:                     20px;
     border:                      0px solid;
     border-radius:               0px;
     border-color:                @selected;
@@ -154,14 +153,15 @@ element normal.normal {
     background-color:            transparent;
     text-color:                  @foreground;
 }
+
+element-text selected,
 element selected.normal {
-    border-radius:               10%;
+	border-radius:               30px;
     background-color:            @color11;
     text-color:                  @foreground;
 }
 element-icon {
     padding:                     0px;
-    border-radius:               100%;
     background-color:            transparent;
     text-color:                  inherit;
     size:                        5%;

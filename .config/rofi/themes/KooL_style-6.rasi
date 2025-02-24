@@ -15,7 +15,6 @@ configuration {
 	me-select-entry:            "MouseSecondary";
     me-accept-entry:            "MousePrimary";
 	window-format:              "{w} · {c} · {t}";
-	dpi:						1;
 }
 
 /* ---- Load wallust colors ---- */
@@ -36,7 +35,7 @@ configuration {
 
 /*****-- Elements Font Size -----*****/
 element-text {
-  font: "JetBrainsMono Nerd Font SemiBold 10";
+  font: "JetBrainsMono Nerd Font SemiBold 11";
 }
 
 /* ---- Window ---- */
@@ -123,12 +122,12 @@ listview {
 
 /* ---- Scrollbar ---- */
 scrollbar {
-  border:						0px;
-  border-radius:				10px;
-  background-color:				transparent;
-  handle-color: 				@active;
-  handle-width: 				2px ;
-  padding:      				0;
+  	border:						0px;
+  	border-radius:				10px;
+  	background-color:				transparent;
+  	handle-color: 				@active;
+  	handle-width: 				2px ;
+  	padding:      				0;
 }
 /* ---- Dummy ---- */
 dummy {
@@ -160,7 +159,7 @@ button selected {
 element {
     enabled:                     true;
     spacing:                     10px;
-    padding:                     4px;
+    padding:                     15px;
     border-radius:               10px;
     background-color:            transparent;
     cursor:                      pointer;
@@ -174,6 +173,8 @@ element normal.urgent {
     background-color:            @urgent;
     text-color:                  @foreground;
 }
+
+element-text selected,
 element normal.active {
     background-color:            @active;
     text-color:                  @foreground;

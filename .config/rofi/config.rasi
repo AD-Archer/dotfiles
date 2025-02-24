@@ -21,13 +21,4 @@ configuration {
 /* note: Element-text font and size, edit configs in ~/.config/rofi/themes/ */
 
 
-//@theme "~/.config/rofi/themes/KooL_style-10-Fancy.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-4.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-5.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-6.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-1.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-12-TOP-Docu.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-11-Win11-list-light.rasi"
-//@theme "~/.config/rofi/themes/KooL_LonerOrZ.rasi"
-//@theme "~/.config/rofi/themes/KooL_style-9.rasi"
-@theme "~/.config/rofi/themes/KooL_style-8.rasi"
+@theme "~/.config/rofi/themes/KooL_style-9.rasi"
