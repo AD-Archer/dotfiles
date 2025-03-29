@@ -37,3 +37,5 @@ HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
