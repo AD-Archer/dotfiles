@@ -39,3 +39,10 @@ SAVEHIST=10000
 setopt appendhistory
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+#alias
+alias vi=nvim
+alias vim=nvim
+alias nv=nvim
+
+. "$HOME/.local/bin/env"
