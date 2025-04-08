@@ -1,5 +1,4 @@
-#darwin-rebuild switch --flake ~/nix#mac
-
+#VERBOSE=1 darwin-rebuild switch --flake '~/nix#mac'
 {
   description = "My macbook flake";
 
@@ -40,19 +39,27 @@
     configModule = { config, pkgs, ... }: {
       nixpkgs.config.allowUnfree = true;
 
-      # Custom activation script to check for Homebrew before installation
+      # System activation scripts to check for Homebrew before installation
       system.activationScripts.preActivation.text = ''
         # Check if Homebrew is already installed
         if [ -f "/opt/homebrew/bin/brew" ] || [ -f "/usr/local/bin/brew" ]; then
           echo "Homebrew is already installed. Skipping installation."
           export HOMEBREW_ALREADY_INSTALLED=1
         else
-          echo "Homebrew not found. Will proceed with installation."
+          echo "Homebrew not found. Installing Homebrew..."
           export HOMEBREW_ALREADY_INSTALLED=0
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          
+          # Make sure homebrew is in the PATH for the current script
+          if [ -f "/opt/homebrew/bin/brew" ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          elif [ -f "/usr/local/bin/brew" ]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+          fi
         fi
       '';
 
-      # Sketchybar setup script
+      # Setup scripts for Sketchybar and NvChad
       system.activationScripts.postActivation.text = ''
         # Remove Sketchybar configuration files
         if [ -d "$HOME/.config/sketchybar" ]; then
@@ -76,6 +83,39 @@
         # Reset menu bar settings to default
         defaults delete com.apple.menuextra 2>/dev/null || true
         killall SystemUIServer 2>/dev/null || true
+        
+        # Create a separate script for NvChad setup that will run at first login
+        mkdir -p "$HOME/.config/nixpkgs"
+        cat > "$HOME/.config/nixpkgs/setup-nvchad.sh" << 'EOF'
+#!/bin/bash
+# Setup NvChad for Neovim if it's not already set up
+if [ ! -d "$HOME/.config/nvim" ] || [ ! -f "$HOME/.config/nvim/init.lua" ]; then
+  echo "Setting up NvChad configuration for Neovim..."
+  # Clean any existing neovim configs
+  rm -rf "$HOME/.config/nvim" 2>/dev/null || true
+  rm -rf "$HOME/.local/state/nvim" 2>/dev/null || true
+  rm -rf "$HOME/.local/share/nvim" 2>/dev/null || true
+  
+  # Clone NvChad repository
+  git clone -b v2.0 https://github.com/NvChad/NvChad "$HOME/.config/nvim" --depth 1
+  echo "NvChad has been installed. Launch nvim to complete setup."
+else
+  echo "NvChad configuration already exists."
+fi
+EOF
+        chmod +x "$HOME/.config/nixpkgs/setup-nvchad.sh"
+        
+        # Add script to run at shell initialization
+        grep -q "setup-nvchad" "$HOME/.zshrc" || echo '
+# Run NvChad setup script if nvim is available
+if command -v nvim >/dev/null 2>&1; then
+  if [ -f "$HOME/.config/nixpkgs/setup-nvchad.sh" ]; then
+    $HOME/.config/nixpkgs/setup-nvchad.sh
+    # Remove the line to prevent future runs
+    sed -i "" "/setup-nvchad/d" "$HOME/.zshrc"
+  fi
+fi
+' >> "$HOME/.zshrc"
       '';
 
       # Homebrew configuration with all packages consolidated here
@@ -132,12 +172,14 @@
           "malwarebytes"
           "mist"
           "vlc"
+          "ghostty"  
           "obs"
           "latest"
           "the-unarchiver"
           "qbittorrent"
           "tailscale"
           "ghostty"
+          "mullvadvpn"
           "raycast"       # Productivity
           "stats"         # System monitoring
           "appcleaner"    # App uninstaller
@@ -145,23 +187,26 @@
           "spotify"
           "zoom"
           "discord"
-          # Removed Sketchybar fonts
+          # Fonts for development
+          "font-jetbrains-mono-nerd-font"  # JetBrains Mono Nerd Font for NvChad
           "sf-symbols"    # Keeping SF Symbols as it's generally useful
         ];
         masApps = {
-          "AnkiApp Flashcards" = 1366312254;
+          "AnkiApp-Flashcards" = 1366312254;
           "eero" = 1498025513;
           "Slack" = 803453959;
-          "bitwarden"= 1352778147
+          "bitwarden"= 1352778147;
+          "live-wallpapers"= 1552826194;
+          "wireguard"=1451685025;
         };
       };
 
       # System packages installed via Nix - keeping only what's necessary for system functionality
       # and not available via Homebrew
       environment.systemPackages = with pkgs; [
-        # Only keeping essential Nix packages that are needed for system functionality
         mkalias  # Needed for application linking
         zsh-powerlevel10k  # For Powerlevel10k ZSH theme
+        neovim  # Add Neovim through Nix to ensure it's available during activation
       ];
 
       # Improved application linking
@@ -273,11 +318,7 @@
           enable = false; # Set to true if you want keyboard shortcuts for yabai
           package = pkgs.skhd;
         };
-        # Sketchybar will be managed by Homebrew services instead
-        # sketchybar = {
-        #   enable = true;
-        #   package = pkgs.sketchybar;
-        # };
+       
       };
 
       # Fonts - updated to use the new nerd-fonts namespace structure
@@ -323,7 +364,9 @@
         gc = "git commit";
         gp = "git push";
         gpl = "git pull";
-        # Sketchybar aliases removed
+        # Neovim aliases
+        vim = "nvim";
+        nv = "nvim";
       };
       
       # Powerlevel10k ZSH theme configuration
@@ -343,7 +386,42 @@
           
           # Enable powerlevel10k instant prompt
           export ZSH_THEME="powerlevel10k/powerlevel10k"
+          
+          # Zim compatibility - ensure it doesn't interfere with p10k
+          if [[ -f "$HOME/.zim/zimfw.zsh" ]]; then
+            # Set ZIM_HOME only if it's not already set
+            : ''${ZIM_HOME:="$HOME/.zim"}
+            
+            # Load Zim after p10k instant prompt 
+            if [[ ! -o login ]]; then
+              source "$ZIM_HOME/zimfw.zsh"
+            fi
+          fi
+          
+          # Common helpful aliases
+          alias ls='ls --color=auto'
+          alias grep='grep --color=auto'
+          alias ..='cd ..'
+          alias ...='cd ../..'
         '';
+      };
+
+      # Add this to your system.activationScripts section
+      system.activationScripts.homebrewDebug = {
+        text = ''
+          echo "===== Debugging Homebrew Integration ====="
+          echo "Homebrew location: $(which brew)"
+          echo "Homebrew version: $(brew --version)"
+          mkdir -p $HOME/.config/homebrew-debug
+          # Save the environment variables for debugging
+          env | grep HOMEBREW > $HOME/.config/homebrew-debug/env.txt
+          # Check existing Homebrew directories
+          echo "Checking Homebrew directories:" >> $HOME/.config/homebrew-debug/dirs.txt
+          ls -la /opt/homebrew/Library >> $HOME/.config/homebrew-debug/dirs.txt 2>&1
+          ls -la /opt/homebrew/Library/Taps >> $HOME/.config/homebrew-debug/dirs.txt 2>&1
+          echo "Debug info saved to $HOME/.config/homebrew-debug/"
+        '';
+        deps = [];
       };
     };
 
@@ -353,7 +431,7 @@
         system = system;
         modules = [
           configModule
-          # Temporarily disable nix-homebrew to avoid conflicts with existing installation
+          # Comment out nix-homebrew to avoid conflicts with existing installation
           # nix-homebrew.darwinModules.nix-homebrew
           # {
           #   nix-homebrew = {
@@ -369,39 +447,6 @@
           #     };
           #   };
           # }
-          # Simplified approach without home-manager to avoid username conflicts
-          {
-            # Basic shell configuration without home-manager
-            environment.shellAliases = {
-              ll = "ls -la";
-              update = "darwin-rebuild switch --flake ~/nix#mac";
-              g = "git";
-              gs = "git status";
-              gc = "git commit";
-              gp = "git push";
-              gpl = "git pull";
-            };
-            
-            # Powerlevel10k ZSH theme configuration
-            programs.zsh = {
-              enable = true;
-              promptInit = ''
-                # Source powerlevel10k
-                source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh
-                [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-              '';
-              interactiveShellInit = ''
-                # p10k instant prompt
-                if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-                  source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-                fi
-                
-                # Enable powerlevel10k instant prompt
-                export ZSH_THEME="powerlevel10k/powerlevel10k"
-              '';
-            };
-          }
         ];
       };
     };
